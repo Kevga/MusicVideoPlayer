@@ -34,6 +34,7 @@ namespace MusicVideoPlayer
         private float offsetSec = 0f;
 
         private EnvironmentSpawnRotation _envSpawnRot;
+
         public EnvironmentSpawnRotation instanceEnvironmentSpawnRotation
         {
             get
@@ -71,7 +72,7 @@ namespace MusicVideoPlayer
             BSEvents.menuSceneLoaded += OnMenuSceneLoaded;
 
             DontDestroyOnLoad(gameObject);
-            
+
             CreateScreen();
         }
 
@@ -81,7 +82,7 @@ namespace MusicVideoPlayer
             if (screen == null) return;
             vsRenderer.material.SetTexture("_MainTex", videoPlayer.texture);
         }
-        
+
         void CreateScreen()
         {
             screen = new GameObject("Screen");
@@ -94,7 +95,9 @@ namespace MusicVideoPlayer
             body.transform.localPosition = new Vector3(0, 0, 0.1f);
             body.transform.localScale = new Vector3(16f / 9f + 0.1f, 1.1f, 0.1f);
             Renderer bodyRenderer = body.GetComponent<Renderer>();
-            bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>().First(x => x.name == "DarkEnvironmentSimple")); // finding objects is wonky because platforms hides them
+            bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>()
+                .First(x =>
+                    x.name == "DarkEnvironmentSimple")); // finding objects is wonky because platforms hides them
 
             GameObject videoScreen = GameObject.CreatePrimitive(PrimitiveType.Quad);
             if (videoScreen.GetComponent<Collider>() != null) Destroy(videoScreen.GetComponent<Collider>());
@@ -104,11 +107,11 @@ namespace MusicVideoPlayer
             vsRenderer = videoScreen.GetComponent<Renderer>();
             vsRenderer.material = new Material(GetShader());
             vsRenderer.material.color = Color.clear;
-            
+
             screen.transform.position = VideoPlacementSetting.Position(placement);
             screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
             screen.transform.localScale = VideoPlacementSetting.Scale(placement) * Vector3.one;
-            
+
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
             videoPlayer.isLooping = true;
             videoPlayer.renderMode = VideoRenderMode.MaterialOverride;
@@ -120,10 +123,10 @@ namespace MusicVideoPlayer
 
             OnMenuSceneLoaded();
         }
-        
+
         private void OnMenuSceneLoaded()
         {
-            if(currentVideo != null) PrepareVideo(currentVideo);
+            if (currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
             //HideScreen();
         }
@@ -148,29 +151,35 @@ namespace MusicVideoPlayer
                 vsRenderer.material.color = Color.clear;
                 return;
             }
+
             if (video.downloadState != DownloadState.Downloaded) return;
             videoPlayer.isLooping = video.loop;
 
             string videoPath = VideoLoader.Instance.GetVideoPath(video);
             videoPlayer.Pause();
-            if(videoPlayer.url != videoPath) videoPlayer.url = videoPath;
+            if (videoPlayer.url != videoPath) videoPlayer.url = videoPath;
             offsetSec = video.offset / 1000f; // ms -> s
             if (video.offset >= 0)
             {
                 videoPlayer.time = offsetSec;
-            } else
+            }
+            else
             {
                 videoPlayer.time = 0;
             }
-            if(!videoPlayer.isPrepared) videoPlayer.Prepare();
+
+            if (!videoPlayer.isPrepared) videoPlayer.Prepare();
             vsRenderer.material.color = Color.clear;
             //Not Sure which of these kills the audio but removing any one of them makes the audio go back on
             videoPlayer.audioOutputMode = VideoAudioOutputMode.None; // Send Audio elsewhere
-            for (ushort track = 0; track < videoPlayer.audioTrackCount; track++) // For Each Track -> Mute Audio on that track
+            for (ushort track = 0;
+                track < videoPlayer.audioTrackCount;
+                track++) // For Each Track -> Mute Audio on that track
             {
                 videoPlayer.SetDirectAudioMute(track, true);
                 videoPlayer.SetDirectAudioVolume(track, 0);
             }
+
             videoPlayer.Pause();
         }
 
@@ -182,8 +191,9 @@ namespace MusicVideoPlayer
 
             if (instanceEnvironmentSpawnRotation != null) // will be null when previewing
             {
-                instanceEnvironmentSpawnRotation.didRotateEvent += ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
-            } 
+                instanceEnvironmentSpawnRotation.didRotateEvent +=
+                    ChangeRotation360; // Set up event for running 360 video (will simply do nothing for regular video)
+            }
 
             ShowScreen();
             vsRenderer.material.color = _onColor;
@@ -193,8 +203,10 @@ namespace MusicVideoPlayer
             {
                 try // Try to get these as there will be a null reference if not in practice mode or only previewing
                 {
-                    practiceSettingsSongSpeedMul = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul;
-                    practiceSettingsSongStart = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime - 1;
+                    practiceSettingsSongSpeedMul = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings
+                        .songSpeedMul;
+                    practiceSettingsSongStart = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.practiceSettings
+                        .startSongTime - 1;
                     if (practiceSettingsSongStart < 0)
                     {
                         practiceSettingsSongStart = 0;
@@ -205,8 +217,12 @@ namespace MusicVideoPlayer
                     practiceSettingsSongSpeedMul = 1;
                     practiceSettingsSongStart = 0;
                 }
+
                 float songSpeed = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
-                videoPlayer.playbackSpeed = practiceSettingsSongSpeedMul != 1 ? practiceSettingsSongSpeedMul : songSpeed; // Set video speed to practice or non-practice speed
+                videoPlayer.playbackSpeed =
+                    practiceSettingsSongSpeedMul != 1
+                        ? practiceSettingsSongSpeedMul
+                        : songSpeed; // Set video speed to practice or non-practice speed
 
                 if (offsetSec + practiceSettingsSongStart > 0)
                 {
@@ -217,13 +233,13 @@ namespace MusicVideoPlayer
                     videoPlayer.time = 0;
                     offsetSec += practiceSettingsSongStart;
                 }
-
             }
             catch (Exception e)
             {
                 Plugin.logger.Debug("Probably cause previews don't have speed mults");
                 Plugin.logger.Error(e.ToString());
             }
+
             Plugin.logger.Debug("Offset for video: " + offsetSec);
             if (offsetSec < 0)
             {
@@ -273,11 +289,10 @@ namespace MusicVideoPlayer
 
         private IEnumerator StartVideoDelayed(float startTime, bool sync)
         {
-
             // Wait
             float timeElapsed = 0;
 
-            if(sync)
+            if (sync)
             {
                 yield return new WaitUntil(() => syncController.songTime >= startTime);
             }
@@ -288,6 +303,7 @@ namespace MusicVideoPlayer
                     videoPlayer.Play();
                     yield break;
                 }
+
                 videoPlayer.frame = 0;
 
                 while (timeElapsed < -startTime)
@@ -296,12 +312,12 @@ namespace MusicVideoPlayer
                     yield return null;
                 }
             }
-            
+
             // Time has elapsed, start video
             // frames are short enough that we shouldn't notice imprecise start time
             videoPlayer.Play();
         }
-        
+
         public void PauseVideo()
         {
             StopAllCoroutines();
@@ -312,7 +328,7 @@ namespace MusicVideoPlayer
         public void ResumeVideo()
         {
             if (videoPlayer == null) return;
-            if(!videoPlayer.isPlaying) videoPlayer.Play();
+            if (!videoPlayer.isPlaying) videoPlayer.Play();
         }
 
         public void ShowScreen()
@@ -324,7 +340,7 @@ namespace MusicVideoPlayer
         {
             screen.SetActive(false);
         }
-        
+
         public void SetScale(Vector3 scale)
         {
             if (Instance.screen == null) return;
@@ -365,8 +381,9 @@ namespace MusicVideoPlayer
             if (glowShader != null) return glowShader;
             // load shader
 
-            var myLoadedAssetBundle = AssetBundle.LoadFromMemory(UIUtilities.GetResource(Assembly.GetExecutingAssembly(), "MusicVideoPlayer.Resources.mvp.bundle"));
-        
+            var myLoadedAssetBundle = AssetBundle.LoadFromMemory(
+                UIUtilities.GetResource(Assembly.GetExecutingAssembly(), "MusicVideoPlayer.Resources.mvp.bundle"));
+
             Shader shader = myLoadedAssetBundle.LoadAsset<Shader>("ScreenGlow");
             myLoadedAssetBundle.Unload(false);
             glowShader = shader;
@@ -376,11 +393,30 @@ namespace MusicVideoPlayer
         //Function to run when rotation changes in 360/90 mode
         //Will never be called if not in those modes
         //Changes video rotation to match where you are looking in 360/90
+        //Notes:
+        //  You probably shouldn't use quaternions, Unity doesn't recommend it and I don't understand it
+        //  quaternion.eulerAngles.y is the current rotation with reference to 0 and is equal to (but a rounded version of) current rotation
+        //  target rotation is where current rotation and q.eA.y are approaching
+        //  as t -> inf current rotation = target rotation
+        //  max i've seen is 165 and min is -495
+        private float lastRotation = 0;
+
         public void ChangeRotation360(Quaternion quaternion)
         {
-            // Plugin.logger.Debug($"Song Time: {syncController.songTime}");
-            // screen.transform.eulerAngles = new Vector3(screen.transform.eulerAngles.x, quaternion.eulerAngles.y, screen.transform.eulerAngles.z); // Set screen rotation relative to itself
-            // screen.transform.position = new Vector3(quaternion.eulerAngles.y, screen.transform.position.y, screen.transform.position.z); // Set screen rotation relative to you
+            // Plugin.logger.Debug($"Quaternion: {quaternion}");
+            // Plugin.logger.Debug($"Quaternion Euler Angles: {quaternion.eulerAngles}");
+            // Plugin.logger.Debug($"Target Rotation: {instanceEnvironmentSpawnRotation.targetRotation}");
+            // Plugin.logger.Debug($"Current Rotation: {instanceEnvironmentSpawnRotation.currentRotation}");
+            if (lastRotation != instanceEnvironmentSpawnRotation.targetRotation)
+            {
+                screen.transform.position = new Vector3(instanceEnvironmentSpawnRotation.targetRotation, screen.transform.position.y, screen.transform.position.z); // Set screen rotation relative to you
+                screen.transform.eulerAngles = new Vector3(screen.transform.eulerAngles.x, instanceEnvironmentSpawnRotation.targetRotation, screen.transform.eulerAngles.z); // Set screen rotation relative to itself
+                lastRotation = instanceEnvironmentSpawnRotation.targetRotation;
+            }
+            // screen.transform.SetPositionAndRotation(
+            //     new Vector3(instanceEnvironmentSpawnRotation.targetRotation, screen.transform.position.y,
+            //         screen.transform.position.z), quaternion); // Set screen rotation relative to you
+            lastRotation = instanceEnvironmentSpawnRotation.targetRotation;
         }
     }
 }
