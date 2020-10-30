@@ -433,13 +433,15 @@ namespace MusicVideoPlayer
             {
                 try
                 {
-                    Plugin.logger.Debug(BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.environmentInfo.environmentType.name);
+                    Plugin.logger.Debug(BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.environmentInfo
+                        .environmentType.name);
                     CoreGameHUDController cgh = Resources.FindObjectsOfTypeAll<CoreGameHUDController>()
                         .LastOrDefault(x => x.isActiveAndEnabled);
                     screenSoftParentRotation.AssignParent(cgh.transform);
+                    screenSoftParentRotation.enabled = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.
+                        environmentInfo.environmentType.name == "CircleEvironmentType";
                 }
                 catch { }
-                screenSoftParentRotation.enabled = BS_Utils.Plugin.LevelData.GameplayCoreSceneSetupData.environmentInfo.environmentType.name == "CircleEvironmentType";
             }
             Plugin.logger.Debug("Offset for video: " + offsetSec);
             StopAllCoroutines();
