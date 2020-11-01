@@ -122,6 +122,8 @@ namespace MusicVideoPlayer
 
         public static SongPreviewPlayer songPreviewPlayer;
 
+        public static AudioSource[] songPreviewAudioSources;
+
         private VideoMenuStatus statusViewer;
 
         private bool isPreviewing = false;
@@ -147,10 +149,10 @@ namespace MusicVideoPlayer
 
         internal void Setup()
         {
+            songPreviewPlayer = Resources.FindObjectsOfTypeAll<SongPreviewPlayer>().First();
             YouTubeDownloader.Instance.downloadProgress += VideoDownloaderDownloadProgress;
             BSEvents.levelSelected += HandleDidSelectLevel;
             BSEvents.gameSceneLoaded += GameSceneLoaded;
-            songPreviewPlayer = Resources.FindObjectsOfTypeAll<SongPreviewPlayer>().First();
 
             videoDetailsViewRect.gameObject.SetActive(true);
             videoSearchResultsViewRect.gameObject.SetActive(false);
@@ -298,6 +300,8 @@ namespace MusicVideoPlayer
             }
 
             SetPreviewState();
+            SetAudioSourcePanning(0f); //0f is neutral
+            ScreenManager.Instance.videoPlayerAudioSource.volume = 0f;
             return true;
         }
 
@@ -1242,6 +1246,37 @@ namespace MusicVideoPlayer
         {
             StartCoroutine(OnPreviewAction());
         }
+
+        private void SetAudioSourcePanning(float pan)
+        {
+            try
+            {
+                // If resetting the panning back to neutral (0f), set all audio sources.
+                // Otherwise only change the active channel.
+                var activeChannel = IPA.Utilities.ReflectionUtil.GetField<int, SongPreviewPlayer>(songPreviewPlayer, "_activeChannel");
+                if (pan == 0f || activeChannel > songPreviewAudioSources.Length - 1)
+                {
+                    for (var source = 0; source < songPreviewAudioSources.Length; source++)
+                    {
+                        if (songPreviewAudioSources[source] != null)
+                        {
+                            songPreviewAudioSources[source].panStereo = pan;
+                        }
+                    }
+                }
+                else
+                {
+                    if (songPreviewAudioSources[activeChannel] != null)
+                    {
+                        songPreviewAudioSources[activeChannel].panStereo = pan;
+                    }  
+                }
+            }
+            catch (Exception e)
+            {
+                Plugin.logger.Warn(e);
+            }
+        }
         
         private IEnumerator OnPreviewAction()
         {
@@ -1261,9 +1296,13 @@ namespace MusicVideoPlayer
                 Plugin.logger.Debug("Done Prepping");
                 ScreenManager.Instance.PlayVideo(true);
                 Plugin.logger.Debug("Playing");
-                yield return songPreviewPlayer.volume = 1;
+                yield return songPreviewPlayer.volume = 1f;
                 songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0,
                     selectedLevel.songDuration, 1f);
+                //1.0 is hard right. only pan "mostly" right, because for some reason the video player audio doesn't
+                //pan hard left either. Also, it sounds a bit more comfortable.
+                SetAudioSourcePanning(0.85f); 
+
             }
             SetPreviewState();
         }

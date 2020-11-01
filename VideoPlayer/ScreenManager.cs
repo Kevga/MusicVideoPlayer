@@ -53,6 +53,7 @@ namespace MusicVideoPlayer
         private Color _onColor = Color.white.ColorWithAlpha(0) * 0.85f;
 
         public VideoPlayer videoPlayer;
+        public AudioSource videoPlayerAudioSource;
         private AudioTimeSyncController syncController;
         private float offsetSec = 0f;
         private bool hasVideo => currentVideo == null || currentVideo.downloadState != DownloadState.Downloaded;
@@ -149,6 +150,15 @@ namespace MusicVideoPlayer
             videoPlayer.errorReceived += VideoPlayerErrorReceived;
             videoPlayer.prepareCompleted += source => source.Pause();
             videoPlayer.waitForFirstFrame = true;
+            
+            videoPlayerAudioSource = gameObject.AddComponent<AudioSource>();
+            videoPlayerAudioSource.volume = 0.0f;
+            videoPlayerAudioSource.reverbZoneMix = 0.0f;
+            videoPlayerAudioSource.spatialBlend = 0.0f;
+            videoPlayerAudioSource.spatialize = false;
+            videoPlayerAudioSource.playOnAwake = false;
+            videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
+            videoPlayer.SetTargetAudioSource(0, videoPlayerAudioSource);
 
             OnMenuSceneLoaded();
             BSEvents.levelQuit += unsetTransformParent;
@@ -174,6 +184,21 @@ namespace MusicVideoPlayer
             if (currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
             HideScreen();
+
+            try
+            {
+                if (VideoMenu.songPreviewPlayer != null)
+                {
+                    VideoMenu.songPreviewAudioSources =
+                        IPA.Utilities.ReflectionUtil.GetField<AudioSource[], SongPreviewPlayer>(
+                            VideoMenu.songPreviewPlayer,
+                            "_audioSources");
+                }
+            }
+            catch (Exception e)
+            {
+                Plugin.logger.Warn(e);
+            }
         }
 
         public void TryPlayVideo()
@@ -399,35 +424,14 @@ namespace MusicVideoPlayer
                     Plugin.logger.Error(e.ToString());
                 }
 
-                for (ushort track = 0;
-                    track < videoPlayer.audioTrackCount;
-                    track++) // For Each Track -> Decrease Audio volume to 0 on that track
-                {
-                    // videoPlayer.SetDirectAudioMute(track, true);
-                    videoPlayer.SetDirectAudioVolume(track, 0f);
-                }
+                videoPlayerAudioSource.volume = 0f;
             }
             else
             {
                 videoPlayer.time = offsetSec > 0 ? offsetSec : 0;
                 videoPlayer.playbackSpeed = 1;
-                //TODO: Make Left Ear Audio the Preview and Right Ear Audio the BeatMap
-                //ushort videoTrack = 1;
-                for (ushort track = 0;
-                    track < videoPlayer.audioTrackCount;
-                    track++) // For Each Track -> Increase Audio volume to .5 (float) on that track
-                {
-                    //if (track != videoTrack) { videoPlayer.SetDirectAudioVolume(track, 0f); continue;}
-                    videoPlayer.SetDirectAudioVolume(track, playPreviewAudio ? .8f : 0f);
-                    Plugin.logger.Info($"Track: {track}");
-                    Plugin.logger.Info($"Channels: {videoPlayer.GetAudioChannelCount(track)}");
-
-                    // videoPlayer.SetDirectAudioMute(track, false);
-                }
-
-                //int previewTracks = VideoMenu.songPreviewPlayer.GetPrivateField<int>("_channelsCount");
-                //VideoMenu.songPreviewPlayer.SetPrivateField("_channelsCount", 1);
-                //VideoMenu.songPreviewPlayer.Update();
+                videoPlayerAudioSource.panStereo = -1f; // -1 is hard left
+                videoPlayerAudioSource.volume = 1f;
             }
 
             if (rotateIn360)

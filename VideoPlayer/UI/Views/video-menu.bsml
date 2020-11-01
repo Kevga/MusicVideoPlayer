@@ -31,7 +31,7 @@
           <button id='delete-button' text='Delete Config' on-click='on-delete-action'/>
           <button id='delete-video-button' text='Delete Video' on-click='on-delete-video-action'/>
           <button id='add-button' text='Add Config' on-click='on-add-action' interactable='false'/>
-          <button id='preview-button' text='Preview' on-click='on-preview-action'/>
+          <button id='preview-button' hover-hint='Left ear is the video, right ear is the beatmap' text='Preview' on-click='on-preview-action'/>
           <button id='search-button' text='Search' on-click='on-search-action'/>
         </horizontal>
     </vertical>
