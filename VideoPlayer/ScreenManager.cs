@@ -130,6 +130,7 @@ namespace MusicVideoPlayer
             videoScreen.transform.parent = screen.transform;
             videoScreen.transform.localPosition = Vector3.zero;
             videoScreen.transform.localScale = new Vector3(16f / 9f, 1, 1);
+            videoScreen.layer = LayerMask.NameToLayer("Note"); // Causes screen to be reflected on the ground
             vsRenderer = videoScreen.GetComponent<Renderer>();
             vsRenderer.material = new Material(GetShader()) {color = Color.clear};
 
