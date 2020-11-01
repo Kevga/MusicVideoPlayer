@@ -1464,7 +1464,6 @@ namespace MusicVideoPlayer
         {
             selectedVideo = null;
             selectedLevel = null;
-            Activate();
         }
 
         private void StatusViewerDidEnable(object sender, EventArgs e)
