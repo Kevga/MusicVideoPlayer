@@ -434,8 +434,7 @@ namespace MusicVideoPlayer
             foreach (var result in results)
             {
                 var description = $"[{result.duration}] {result.description}";
-                var item = new CustomListTableData.CustomCellInfo(result.title, description);
-
+                var item = new CustomListTableData.CustomCellInfo(FilterEmoji(result.title), FilterEmoji(description));
                 var request = UnityWebRequestTexture.GetTexture(result.thumbnailURL);
                 yield return request.SendWebRequest();
                 if (request.isNetworkError || request.isHttpError)
