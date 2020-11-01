@@ -167,7 +167,17 @@ namespace MusicVideoPlayer
 
         #region Public Methods
 
+        public void AddTab()
+        {
+            Plugin.logger.Debug("Adding tab");
+            GameplaySetup.instance.AddTab("Video Player", "MusicVideoPlayer.UI.Views.video-menu.bsml", this);
+        }
 
+        public void RemoveTab()
+        {
+            Plugin.logger.Debug("Removing tab");
+            GameplaySetup.instance.RemoveTab("Video Player");
+        }
         public bool isSameVideo(VideoData videoData, VideoDatas videoDatas)
         {
             return selectedLevel != videoData.level || videoTitleText.text == "No Video" ||
@@ -184,12 +194,6 @@ namespace MusicVideoPlayer
             LoadVideoSettings(videoData, false);
         }
 
-        private string FilterEmoji(string text)
-        {
-            //see https://stackoverflow.com/a/28025891 for an explanation
-            return Regex.Replace(text, @"\p{Cs}", "");
-        }
-        
         public void LoadVideoSettings(VideoData videoData, bool checkForVideo = true)
         {
             // Plugin.logger.Info($"Stopping Preview");
@@ -262,6 +266,12 @@ namespace MusicVideoPlayer
 
         #region Private Methods
 
+        private string FilterEmoji(string text)
+        {
+            //see https://stackoverflow.com/a/28025891 for an explanation
+            return Regex.Replace(text, @"\p{Cs}", "");
+        }
+        
         private void EnableButtons(bool enable)
         {
             offsetDecreaseButton.interactable = enable;

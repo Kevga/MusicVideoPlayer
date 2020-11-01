@@ -11,7 +11,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using System.Linq;
+using System.Reflection;
 using BeatSaberMarkupLanguage.GameplaySetup;
+using HarmonyLib;
 using IPA.Config.Data;
 
 
@@ -21,6 +23,9 @@ namespace MusicVideoPlayer
     public sealed class Plugin
     {
         public static IPA.Logging.Logger logger;
+        
+        public const string HarmonyId = "com.github.rie-kumar.MusicVideoPlayer";
+        internal static Harmony harmony => new Harmony(HarmonyId);
 
         [Init]
         public void Init(IPA.Logging.Logger logger)
@@ -33,13 +38,28 @@ namespace MusicVideoPlayer
         {
             Settings.Init();
             SettingsUI.CreateMenu();
-            GameplaySetup.instance.AddTab("Video", "MusicVideoPlayer.UI.Views.video-menu.bsml", VideoMenu.instance);
+            VideoMenu.instance.AddTab();
             BSEvents.OnLoad();
             BSEvents.lateMenuSceneLoadedFresh += OnMenuSceneLoadedFresh;
             // BSEvents.menuSceneLoaded += OnMenuSceneLoaded;
             // BSEvents.menuSceneActive += OnMenuSceneLoaded;
             // BSEvents.gameSceneLoaded += OnMenuSceneLoaded;
             Base64Sprites.ConvertToSprites();
+            ApplyHarmonyPatches();
+        }
+        
+        public static void ApplyHarmonyPatches()
+        {
+            try
+            {
+                logger.Debug("Applying Harmony patches.");
+                harmony.PatchAll(Assembly.GetExecutingAssembly());
+            }
+            catch (Exception ex)
+            {
+                logger.Critical("Error applying Harmony patches: " + ex.Message);
+                logger.Debug(ex);
+            }
         }
 
         // private void OnMenuSceneLoaded()
